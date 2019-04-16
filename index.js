@@ -10,6 +10,8 @@ let aws_access_key_id = "";
 let aws_secret_access_key = "";
 let aws_session_token = "";
 
+let printed = false;
+
 getAwsCredentialsPath()
 .then(function(credentialsPath) {
   getContentsFromCredentialsFile(credentialsPath)
@@ -17,7 +19,7 @@ getAwsCredentialsPath()
     let rl = readline(credentialsPath);
     rl.on('line', function(line, linecount, bytecount) {
       if(line.indexOf(AWS_ACCESS_KEY_ID) > -1) {
-        if (aws_access_key_id != "") {
+        if (aws_access_key_id == "") {
           aws_access_key_id = getAccessKey(line);
         }
       } if (line.indexOf(AWS_SECRET_ACCESS_KEY) > -1) {
@@ -29,34 +31,25 @@ getAwsCredentialsPath()
           aws_session_token = getAccessKey(line);
         }
       }
+      if (!printed && aws_session_token != "") {
+        print();
+      }
     })
-
-    process.env.AWS_ACCESS_KEY_ID = aws_access_key_id;
-    process.env.AWS_SECRET_ACCESS_KEY = aws_secret_access_key;
-    process.env.AWS_SESSION_TOKEN = aws_session_token;
-    process.env.DAN = "ME";
-
   });
 });
 
 function getAccessKey(content) {
   let beg = content.indexOf(" = ") + 3;
   let returnString = content.substring(beg, content.length);
-  console.log("*");
-  console.log(returnString);
   return returnString;
 }
 
-// function getSecretAccessKeyId(content){
-//   let beg = content.indexOf("=") + 3;
-//   let returnString = content.substring(beg, content.length);
-//   console.log(returnString);
-//   return returnString;
-// }
-//
-// function getSessionToken() {
-//
-// }
+function print() {
+  printed = true;
+  console.log("export " + "AWS_ACCESS_KEY_ID" + "=" + aws_access_key_id);
+  console.log("export " + "AWS_SECRET_ACCESS_KEY" + "=" +aws_secret_access_key);
+  console.log("export " + "AWS_SESSION_TOKEN" + "=" + aws_session_token);
+}
 
 function getContentsFromCredentialsFile(path) {
   console.log(path);
@@ -65,8 +58,6 @@ function getContentsFromCredentialsFile(path) {
     resolve(fileContent);
     });
 };
-
-
 
 function getAwsCredentialsPath() {
   return new Promise((resolve, reject) => {
